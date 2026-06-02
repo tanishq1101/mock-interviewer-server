@@ -60,6 +60,14 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
+// ── Root greeting ─────────────────────────────────────
+app.get("/", (_req, res) => {
+  res.json({
+    message: "InterviewAI API is running successfully!",
+    health: "/api/health",
+  });
+});
+
 // ── Routes ────────────────────────────────────────────
 app.use("/api", interviewRoutes);
 app.use("/api/dashboard", dashboardRoutes);

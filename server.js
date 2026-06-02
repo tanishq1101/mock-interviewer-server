@@ -52,7 +52,7 @@ if (isDev) {
 }
 
 // ── Health check ──────────────────────────────────────
-app.get("/api/health", (_req, res) => {
+app.get(["/api/health", "/health"], (_req, res) => {
   res.json({
     status: "ok",
     uptime: Math.floor(process.uptime()),
@@ -69,8 +69,8 @@ app.get("/", (_req, res) => {
 });
 
 // ── Routes ────────────────────────────────────────────
-app.use("/api", interviewRoutes);
-app.use("/api/dashboard", dashboardRoutes);
+app.use(["/api", "/"], interviewRoutes);
+app.use(["/api/dashboard", "/dashboard"], dashboardRoutes);
 
 // ── Global error handler ──────────────────────────────
 app.use((err, _req, res, _next) => {

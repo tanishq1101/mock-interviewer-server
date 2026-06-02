@@ -3,8 +3,8 @@ import { startInterview } from "../agents/interviewAgent.js";
 import { evaluateAnswer } from "../agents/evaluationAgent.js";
 import { generateReport } from "../agents/reportAgent.js";
 import { db } from "../db/index.js";
-import { interviews, interviewQuestions } from "../db/schema.js";
-import { eq } from "drizzle-orm";
+import { interviews, interviewQuestions, subscriptions } from "../db/schema.js";
+import { eq, sql } from "drizzle-orm";
 
 const router = express.Router();
 const isDev = process.env.NODE_ENV !== "production";
@@ -46,6 +46,31 @@ router.post("/start", async (req, res) => {
     }
 
     try {
+        if (db && userId) {
+            // Check subscription plan & limits
+            const [sub] = await db
+                .select()
+                .from(subscriptions)
+                .where(eq(subscriptions.userId, userId));
+            
+            const plan = sub?.plan || "free";
+
+            if (plan === "free") {
+                const rows = await db
+                    .select({ count: sql`count(*)` })
+                    .from(interviews)
+                    .where(eq(interviews.userId, userId));
+                const count = parseInt(rows[0]?.count || 0);
+
+                if (count >= 10) {
+                    return res.status(402).json({
+                        error: "limit_reached",
+                        message: "You have reached the limit of 10 free mock interviews. Please upgrade to Pro or Pro Max to practice unlimited sessions."
+                    });
+                }
+            }
+        }
+
         const start = Date.now();
         const question = await startInterview(role.trim(), level.trim(), techStack.trim(), interviewType || "technical");
         console.log(`[START] Generated in ${Date.now() - start}ms`);

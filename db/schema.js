@@ -36,3 +36,13 @@ export const userAnswerRecordings = pgTable("user_answer_recordings", {
     recordingMethod: varchar("recording_method", { length: 20 }).default("mic"),
     createdAt: timestamp("created_at").defaultNow(),
 });
+
+// ── Subscriptions table ──────────────────────────────
+export const subscriptions = pgTable("subscriptions", {
+    userId: varchar("user_id", { length: 255 }).primaryKey(),
+    plan: varchar("plan", { length: 50 }).default("free").notNull(), // 'free', 'pro', 'promax'
+    billingPeriod: varchar("billing_period", { length: 20 }), // 'monthly', 'quarterly'
+    status: varchar("status", { length: 20 }).default("active").notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+

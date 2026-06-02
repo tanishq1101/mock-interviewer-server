@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import { clerkMiddleware } from "@clerk/express";
 import interviewRoutes from "./routes/interviewRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
+import subscriptionRoutes from "./routes/subscriptionRoutes.js";
 
 dotenv.config();
 
@@ -70,6 +71,7 @@ app.get("/", (_req, res) => {
 
 // ── Routes ────────────────────────────────────────────
 app.use(["/api", "/"], interviewRoutes);
+app.use(["/api", "/"], subscriptionRoutes);
 app.use(["/api/dashboard", "/dashboard"], dashboardRoutes);
 
 // ── Global error handler ──────────────────────────────

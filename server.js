@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import { clerkMiddleware } from "@clerk/express";
 import interviewRoutes from "./routes/interviewRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 
@@ -28,6 +29,18 @@ app.use(
 );
 
 app.use(express.json({ limit: "1mb" }));
+
+// ── Clerk Authentication ──────────────────────────────
+if (process.env.CLERK_SECRET_KEY) {
+  try {
+    app.use(clerkMiddleware());
+    console.log("🔒 Clerk authentication middleware enabled");
+  } catch (err) {
+    console.error("Failed to initialize Clerk middleware:", err.message);
+  }
+} else {
+  console.warn("⚠️ Warning: CLERK_SECRET_KEY is not defined. Backend running in INSECURE mode.");
+}
 
 // ── Request logger (dev only) ─────────────────────────
 if (isDev) {

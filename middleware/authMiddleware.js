@@ -7,7 +7,8 @@ import { eq } from "drizzle-orm";
  * Ensures the requesting userId matches the interview's userId.
  */
 export async function requireOwnership(req, res, next) {
-    const userId = req.query.userId || req.body?.userId;
+    // Retrieve verified userId from Clerk auth if present, otherwise fall back
+    const userId = req.auth?.userId || req.query.userId || req.body?.userId;
     const interviewId = req.params.id;
 
     if (!userId) {

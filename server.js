@@ -94,7 +94,11 @@ process.on("uncaughtException", (err) => {
 // ── Start ─────────────────────────────────────────────
 const PORT = process.env.PORT || 5001;
 
-app.listen(PORT, () => {
-  console.log(`\n🚀 InterviewAI backend running on http://localhost:${PORT}`);
-  console.log(`   Health check: http://localhost:${PORT}/api/health\n`);
-});
+if (!process.env.NETLIFY) {
+  app.listen(PORT, () => {
+    console.log(`\n🚀 InterviewAI backend running on http://localhost:${PORT}`);
+    console.log(`   Health check: http://localhost:${PORT}/api/health\n`);
+  });
+}
+
+export default app;

@@ -4,22 +4,23 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const apiKey = process.env.GROQ_API_KEY;
+let groq = null;
 
 if (!apiKey) {
-    console.error("❌ GROQ_API_KEY is not set in .env file");
-    console.error("   Get a free key at: https://console.groq.com/keys");
-    process.exit(1);
+    console.warn("⚠️ Warning: GROQ_API_KEY is not set. Text generation features will fail.");
+} else {
+    console.log(`✓ Groq API key loaded (${apiKey.slice(0, 8)}...${apiKey.slice(-4)})`);
+    groq = new Groq({ apiKey });
 }
-
-console.log(`✓ Groq API key loaded (${apiKey.slice(0, 8)}...${apiKey.slice(-4)})`);
-
-const groq = new Groq({ apiKey });
 
 /**
  * Generate a completion using Groq.
  * Uses llama-3.3-70b-versatile — fast, high quality, free tier.
  */
 export async function generateText(prompt, { json = false, maxRetries = 2 } = {}) {
+    if (!groq) {
+        throw new Error("GROQ_API_KEY is not set on the server.");
+    }
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
         try {
             const completion = await groq.chat.completions.create({

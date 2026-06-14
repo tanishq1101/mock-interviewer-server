@@ -42,7 +42,20 @@ router.post("/start", async (req, res) => {
     ].filter(Boolean);
 
     if (errs.length) {
-        return res.status(400).json({ error: errs.join("; ") });
+        return res.status(400).json({
+            error: errs.join("; "),
+            debug: {
+                body: req.body,
+                url: req.url,
+                hasApiGateway: !!req.apiGateway,
+                event: req.apiGateway ? {
+                    path: req.apiGateway.event.path,
+                    hasBody: !!req.apiGateway.event.body,
+                    bodyLength: req.apiGateway.event.body ? req.apiGateway.event.body.length : 0,
+                    isBase64: req.apiGateway.event.isBase64Encoded
+                } : null
+            }
+        });
     }
 
     try {

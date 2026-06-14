@@ -33,8 +33,11 @@ app.use(express.json({ limit: "1mb" }));
 
 // ── Serverless Body Parser Fix ────────────────────────
 app.use((req, res, next) => {
+  console.log(`[DEBUG] Request URL: ${req.url}, Method: ${req.method}`);
+  console.log(`[DEBUG] Initial req.body:`, req.body);
   if (req.apiGateway && req.apiGateway.event) {
     const event = req.apiGateway.event;
+    console.log(`[DEBUG] event.path: ${event.path}, event.body length: ${event.body ? event.body.length : 0}`);
     if (event.body && (!req.body || Object.keys(req.body).length === 0)) {
       try {
         let bodyStr = event.body;
@@ -42,11 +45,13 @@ app.use((req, res, next) => {
           bodyStr = Buffer.from(bodyStr, "base64").toString("utf8");
         }
         req.body = JSON.parse(bodyStr);
-        console.log("[SERVERLESS] Parsed body:", req.body);
+        console.log("[SERVERLESS] Successfully parsed body:", req.body);
       } catch (err) {
         console.warn("[SERVERLESS] Body parse error:", err.message);
       }
     }
+  } else {
+    console.log("[DEBUG] req.apiGateway is NOT defined");
   }
   next();
 });

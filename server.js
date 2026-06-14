@@ -31,6 +31,26 @@ app.use(
 
 app.use(express.json({ limit: "1mb" }));
 
+// ── Serverless Body Parser Fix ────────────────────────
+app.use((req, res, next) => {
+  if (req.apiGateway && req.apiGateway.event) {
+    const event = req.apiGateway.event;
+    if (event.body && (!req.body || Object.keys(req.body).length === 0)) {
+      try {
+        let bodyStr = event.body;
+        if (event.isBase64Encoded) {
+          bodyStr = Buffer.from(bodyStr, "base64").toString("utf8");
+        }
+        req.body = JSON.parse(bodyStr);
+        console.log("[SERVERLESS] Parsed body:", req.body);
+      } catch (err) {
+        console.warn("[SERVERLESS] Body parse error:", err.message);
+      }
+    }
+  }
+  next();
+});
+
 // ── Clerk Authentication ──────────────────────────────
 if (process.env.CLERK_SECRET_KEY) {
   try {
@@ -70,9 +90,14 @@ app.get("/", (_req, res) => {
 });
 
 // ── Routes ────────────────────────────────────────────
-app.use(["/api", "/"], interviewRoutes);
-app.use(["/api", "/"], subscriptionRoutes);
-app.use(["/api/dashboard", "/dashboard"], dashboardRoutes);
+app.use("/api", interviewRoutes);
+app.use(interviewRoutes);
+
+app.use("/api", subscriptionRoutes);
+app.use(subscriptionRoutes);
+
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/dashboard", dashboardRoutes);
 
 // ── Global error handler ──────────────────────────────
 app.use((err, _req, res, _next) => {

@@ -33,26 +33,37 @@ app.use(express.json({ limit: "1mb" }));
 
 // ── Serverless Body Parser Fix ────────────────────────
 app.use((req, res, next) => {
-  console.log(`[DEBUG] Request URL: ${req.url}, Method: ${req.method}`);
-  console.log(`[DEBUG] Initial req.body:`, req.body);
-  if (req.apiGateway && req.apiGateway.event) {
-    const event = req.apiGateway.event;
-    console.log(`[DEBUG] event.path: ${event.path}, event.body length: ${event.body ? event.body.length : 0}`);
-    if (event.body && (!req.body || Object.keys(req.body).length === 0)) {
-      try {
-        let bodyStr = event.body;
-        if (event.isBase64Encoded) {
-          bodyStr = Buffer.from(bodyStr, "base64").toString("utf8");
-        }
-        req.body = JSON.parse(bodyStr);
-        console.log("[SERVERLESS] Successfully parsed body:", req.body);
-      } catch (err) {
-        console.warn("[SERVERLESS] Body parse error:", err.message);
-      }
+  // Case 1: Body is a Buffer
+  if (Buffer.isBuffer(req.body)) {
+    try {
+      req.body = JSON.parse(req.body.toString("utf8"));
+    } catch (err) {
+      console.warn("[BODY FIX] Failed to parse Buffer body:", err.message);
     }
-  } else {
-    console.log("[DEBUG] req.apiGateway is NOT defined");
   }
+
+  // Case 2: Body is a string
+  if (typeof req.body === "string") {
+    try {
+      req.body = JSON.parse(req.body);
+    } catch (err) {
+      console.warn("[BODY FIX] Failed to parse string body:", err.message);
+    }
+  }
+
+  // Case 3: Body is empty but event has raw body (serverless gateways)
+  if ((!req.body || Object.keys(req.body).length === 0) && req.apiGateway?.event?.body) {
+    try {
+      let bodyStr = req.apiGateway.event.body;
+      if (req.apiGateway.event.isBase64Encoded) {
+        bodyStr = Buffer.from(bodyStr, "base64").toString("utf8");
+      }
+      req.body = JSON.parse(bodyStr);
+    } catch (err) {
+      console.warn("[BODY FIX] Failed to parse API Gateway body:", err.message);
+    }
+  }
+
   next();
 });
 

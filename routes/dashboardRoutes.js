@@ -24,7 +24,12 @@ router.get("/", async (req, res) => {
         res.json({ interviews: result });
     } catch (err) {
         console.error("[DASHBOARD] Error fetching interviews:", err.message);
-        res.status(500).json({ error: "Failed to fetch interviews", details: err.message, stack: err.stack });
+        res.status(500).json({ 
+            error: "Failed to fetch interviews", 
+            details: err.message, 
+            cause: err.cause?.message || err.cause?.toString() || String(err.cause),
+            stack: err.stack 
+        });
     }
 });
 
